@@ -2,9 +2,9 @@ namespace LokiLoggingProvider.UnitTests.Logger;
 
 using System;
 using System.Collections.Generic;
-using LokiLoggingProvider.Formatters;
-using LokiLoggingProvider.Logger;
-using LokiLoggingProvider.Options;
+using LoggingProvider.Loki.Formatters;
+using LoggingProvider.Loki.Logger;
+using LoggingProvider.Loki.Options;
 using Microsoft.Extensions.Logging;
 using Xunit;
 

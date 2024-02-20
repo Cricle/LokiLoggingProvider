@@ -1,5 +1,5 @@
-namespace LokiLoggingProvider.Logger;
+namespace LoggingProvider.Loki.Logger;
 
 using System;
 
-internal record LokiLogEntry(DateTime Timestamp, LabelValues Labels, string Message);
+internal readonly record struct LokiLogEntry(DateTimeOffset Timestamp, LabelValues Labels, string Message);

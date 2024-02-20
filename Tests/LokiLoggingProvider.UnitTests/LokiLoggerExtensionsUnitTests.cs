@@ -1,6 +1,7 @@
 namespace LokiLoggingProvider.UnitTests;
 
-using LokiLoggingProvider.Options;
+using LoggingProvider.Loki;
+using LoggingProvider.Loki.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Configuration;

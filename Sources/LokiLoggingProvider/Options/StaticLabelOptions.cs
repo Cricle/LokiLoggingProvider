@@ -1,4 +1,4 @@
-namespace LokiLoggingProvider.Options;
+namespace LoggingProvider.Loki.Options;
 
 using System.Collections.Generic;
 

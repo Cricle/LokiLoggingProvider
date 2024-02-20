@@ -5,8 +5,8 @@
 namespace LokiLoggingProvider.UnitTests.LoggerFactories;
 
 using System;
-using LokiLoggingProvider.Logger;
-using LokiLoggingProvider.LoggerFactories;
+using LoggingProvider.Loki.Logger;
+using LoggingProvider.Loki.LoggerFactories;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
@@ -19,7 +19,7 @@ public class NullLoggerFactoryUnitTests
         public void When_CreatingLogger_Expect_LoggerCreated()
         {
             // Arrange
-            using ILokiLoggerFactory loggerFactory = new LokiLoggingProvider.LoggerFactories.NullLoggerFactory();
+            using ILokiLoggerFactory loggerFactory = new LoggingProvider.Loki.LoggerFactories.NullLoggerFactory();
             string categoryName = nameof(categoryName);
 
             // Act
@@ -33,7 +33,7 @@ public class NullLoggerFactoryUnitTests
         public void When_CreatingLoggerWithDisposedLoggerFactory_NoExceptions()
         {
             // Arrange
-            ILokiLoggerFactory loggerFactory = new LokiLoggingProvider.LoggerFactories.NullLoggerFactory();
+            ILokiLoggerFactory loggerFactory = new LoggingProvider.Loki.LoggerFactories.NullLoggerFactory();
             loggerFactory.Dispose();
 
             string categoryName = nameof(categoryName);
@@ -52,7 +52,7 @@ public class NullLoggerFactoryUnitTests
         public void When_DisposingMoreThanOnce_Expect_NoExceptions()
         {
             // Arrange
-            ILokiLoggerFactory loggerFactory = new LokiLoggingProvider.LoggerFactories.NullLoggerFactory();
+            ILokiLoggerFactory loggerFactory = new LoggingProvider.Loki.LoggerFactories.NullLoggerFactory();
 
             // Act
             Exception result = Record.Exception(() =>
@@ -72,7 +72,7 @@ public class NullLoggerFactoryUnitTests
         public void When_SettingScopeProvider_Expect_NoExceptions()
         {
             // Arrange
-            using ILokiLoggerFactory loggerFactory = new LokiLoggingProvider.LoggerFactories.NullLoggerFactory();
+            using ILokiLoggerFactory loggerFactory = new LoggingProvider.Loki.LoggerFactories.NullLoggerFactory();
 
             // Act
             Exception result = Record.Exception(() => loggerFactory.SetScopeProvider(NullExternalScopeProvider.Instance));

@@ -1,5 +1,4 @@
-namespace LokiLoggingProvider.Logger;
-
+namespace LoggingProvider.Loki.Logger;
 using System;
 
 internal sealed class NullScope : IDisposable

@@ -1,12 +1,16 @@
-namespace LokiLoggingProvider.Formatters;
+namespace LoggingProvider.Loki.Formatters;
 
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using LokiLoggingProvider.Extensions;
-using LokiLoggingProvider.Options;
+using System.Text.Json.Serialization;
+using LoggingProvider.Loki.Extensions;
+using LoggingProvider.Loki.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+
+[JsonSerializable(typeof(LogValues))]
+internal partial class LogValuesJsonSerializerContext : JsonSerializerContext { }
 
 internal class JsonFormatter : ILogEntryFormatter
 {
@@ -18,7 +22,7 @@ internal class JsonFormatter : ILogEntryFormatter
     {
         this.formatterOptions = formatterOptions;
 
-        this.serializerOptions = new JsonSerializerOptions
+        serializerOptions = new JsonSerializerOptions(LogValuesJsonSerializerContext.Default.Options)
         {
             WriteIndented = this.formatterOptions.WriteIndented,
         };
@@ -29,12 +33,12 @@ internal class JsonFormatter : ILogEntryFormatter
         LogValues logValues = new();
         logValues.SetLogLevel(logEntry.LogLevel.ToString());
 
-        if (this.formatterOptions.IncludeCategory)
+        if (formatterOptions.IncludeCategory)
         {
             logValues.SetCategory(logEntry.Category);
         }
 
-        if (this.formatterOptions.IncludeEventId)
+        if (formatterOptions.IncludeEventId)
         {
             logValues.SetEventId(logEntry.EventId.Id);
         }
@@ -45,7 +49,11 @@ internal class JsonFormatter : ILogEntryFormatter
         {
             try
             {
+#if NETSTANDARD2_0
+                logValues.SetState(state.ToDictionary(x=>x.Key,x=>x.Value));
+#else
                 logValues.SetState(new Dictionary<string, object?>(state));
+#endif
             }
             catch
             {
@@ -53,7 +61,7 @@ internal class JsonFormatter : ILogEntryFormatter
             }
         }
 
-        if (this.formatterOptions.IncludeScopes && scopeProvider != null)
+        if (formatterOptions.IncludeScopes && scopeProvider != null)
         {
             List<object?> scopes = new();
 
@@ -64,7 +72,11 @@ internal class JsonFormatter : ILogEntryFormatter
                     {
                         try
                         {
+#if NETSTANDARD2_0
+                            state.Add(keyValuePairs.ToDictionary(x => x.Key, x => x.Value));
+#else
                             state.Add(new Dictionary<string, object?>(keyValuePairs));
+#endif
                             return;
                         }
                         catch
@@ -90,11 +102,11 @@ internal class JsonFormatter : ILogEntryFormatter
             logValues.SetExceptionDetails(logEntry.Exception.ToString());
         }
 
-        if (this.formatterOptions.IncludeActivityTracking)
+        if (formatterOptions.IncludeActivityTracking)
         {
             logValues.AddActivityTracking();
         }
 
-        return JsonSerializer.Serialize(logValues, this.serializerOptions);
+        return JsonSerializer.Serialize(logValues, serializerOptions);
     }
 }

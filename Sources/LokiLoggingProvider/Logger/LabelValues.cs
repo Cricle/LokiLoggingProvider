@@ -1,12 +1,12 @@
-namespace LokiLoggingProvider.Logger;
+namespace LoggingProvider.Loki.Logger;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LokiLoggingProvider.Options;
+using LoggingProvider.Loki.Options;
 using Microsoft.Extensions.Logging.Abstractions;
 
-internal class LabelValues : SortedDictionary<string, string>
+internal class LabelValues : Dictionary<string, string>
 {
     public LabelValues()
     {
@@ -16,12 +16,12 @@ internal class LabelValues : SortedDictionary<string, string>
     {
         if (!string.IsNullOrWhiteSpace(options.JobName))
         {
-            this.SetJob(options.JobName);
+            SetJob(options.JobName);
         }
 
         if (options.IncludeInstanceLabel)
         {
-            this.SetInstance(Environment.MachineName);
+            SetInstance(Environment.MachineName);
         }
 
         foreach (KeyValuePair<string, object?> label in options.AdditionalStaticLabels)
@@ -30,7 +30,15 @@ internal class LabelValues : SortedDictionary<string, string>
 
             if (value != null)
             {
-                this.TryAdd(label.Key.Replace(" ", string.Empty), value);
+#if NETSTANDARD2_0
+                var key = label.Key.Replace(" ", string.Empty);
+                if (!ContainsKey(key))
+                {
+                    this[key] = value;
+                }
+#else
+                TryAdd(label.Key.Replace(" ", string.Empty), value);
+#endif
             }
         }
     }
@@ -62,6 +70,26 @@ internal class LabelValues : SortedDictionary<string, string>
         if (options.IncludeException && logEntry.Exception != null)
         {
             labelValues.SetException(logEntry.Exception.GetType().ToString());
+        }
+
+        if (options.IncludeDynamicTags && logEntry.State is IEnumerable<KeyValuePair<string, object>> tags)
+        {
+            foreach (var item in tags)
+            {
+                if (item.Key!= "{OriginalFormat}" && item.Value != null)
+                {
+
+#if NETSTANDARD2_0
+                    if (!labelValues.ContainsKey(item.Key))
+                    {
+                        labelValues.Add(item.Key, item.Value.ToString()!);
+                    }
+#else
+
+                    labelValues.TryAdd(item.Key, item.Value!.ToString()!);
+#endif
+                }
+            }
         }
 
         return labelValues;

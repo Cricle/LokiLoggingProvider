@@ -7,8 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using LokiLoggingProvider.Logger;
-using LokiLoggingProvider.PushClients;
+using LoggingProvider.Loki.Logger;
+using LoggingProvider.Loki.PushClients;
 using Xunit;
 
 public class LokiLogEntryProcessorUnitTests

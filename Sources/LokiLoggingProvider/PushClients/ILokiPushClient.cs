@@ -1,6 +1,6 @@
-namespace LokiLoggingProvider.PushClients;
+namespace LoggingProvider.Loki.PushClients;
 
-using LokiLoggingProvider.Logger;
+using LoggingProvider.Loki.Logger;
 
 internal interface ILokiPushClient
 {

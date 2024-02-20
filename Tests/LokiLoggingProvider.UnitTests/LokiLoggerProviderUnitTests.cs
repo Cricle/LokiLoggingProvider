@@ -5,8 +5,9 @@
 namespace LokiLoggingProvider.UnitTests;
 
 using System;
-using LokiLoggingProvider.Logger;
-using LokiLoggingProvider.Options;
+using LoggingProvider.Loki;
+using LoggingProvider.Loki.Logger;
+using LoggingProvider.Loki.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -75,7 +76,6 @@ public class LokiLoggerProviderUnitTests
     public class SetScopeProvider
     {
         [Theory]
-        [InlineData(PushClient.Grpc)]
         [InlineData(PushClient.Http)]
         public void When_SettingScopeProvider_Expect_ScopeProviderSet(PushClient client)
         {
@@ -101,7 +101,7 @@ public class LokiLoggerProviderUnitTests
         {
             // Arrange
             LokiLoggerOptions originalOptions = new() { Client = PushClient.None };
-            LokiLoggerOptions updatedOptions = new() { Client = PushClient.Grpc };
+            LokiLoggerOptions updatedOptions = new() { Client = PushClient.Http };
 
             MockOptionsMonitor optionsMonitor = new(originalOptions);
             LokiLoggerProvider loggerProvider = new(optionsMonitor);

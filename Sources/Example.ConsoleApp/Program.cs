@@ -1,6 +1,6 @@
 ﻿namespace Example.ConsoleApp;
 
-using LokiLoggingProvider.Options;
+using LoggingProvider.Loki;
 using Microsoft.Extensions.Logging;
 
 public class Program
@@ -13,7 +13,7 @@ public class Program
     {
         using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
         {
-            builder.AddLoki(configure => configure.Client = PushClient.Http);
+            builder.AddLoki(configure => configure.Client =  LoggingProvider.Loki.Options.PushClient.Http);
         });
 
         ILogger<Program> logger = loggerFactory.CreateLogger<Program>();

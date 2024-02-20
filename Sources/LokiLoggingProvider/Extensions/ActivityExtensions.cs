@@ -1,4 +1,4 @@
-namespace LokiLoggingProvider.Extensions;
+namespace LoggingProvider.Loki.Extensions;
 
 using System.Diagnostics;
 

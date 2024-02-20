@@ -1,4 +1,4 @@
-namespace LokiLoggingProvider.LoggerFactories;
+namespace LoggingProvider.Loki.LoggerFactories;
 
 using System;
 using Microsoft.Extensions.Logging;

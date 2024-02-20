@@ -1,9 +1,10 @@
-namespace LokiLoggingProvider.Logger;
+namespace LoggingProvider.Loki.Logger;
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
-using LokiLoggingProvider.PushClients;
+using LoggingProvider.Loki.PushClients;
 
 internal sealed class LokiLogEntryProcessor : ILokiLogEntryProcessor
 {
@@ -19,12 +20,12 @@ internal sealed class LokiLogEntryProcessor : ILokiLogEntryProcessor
     {
         this.client = client;
 
-        this.backgroundThread = new Thread(this.ProcessLogQueue)
+        backgroundThread = new Thread(ProcessLogQueue)
         {
             Name = nameof(LokiLogEntryProcessor),
         };
 
-        this.backgroundThread.Start();
+        backgroundThread.Start();
     }
 
     // Internal for testing
@@ -32,44 +33,46 @@ internal sealed class LokiLogEntryProcessor : ILokiLogEntryProcessor
 
     public void Dispose()
     {
-        if (this.disposed)
+        if (disposed)
         {
             return;
         }
 
-        this.MessageQueue.CompleteAdding();
+        MessageQueue.CompleteAdding();
 
         try
         {
-            this.backgroundThread.Join();
+            backgroundThread.Join();
         }
-        catch (ThreadStateException)
+        catch (ThreadStateException ex)
         {
             // Do nothing
+            Debug.WriteLine(ex);
         }
 
-        this.disposed = true;
+        disposed = true;
     }
 
     public void EnqueueMessage(LokiLogEntry message)
     {
-        if (this.disposed)
+        if (disposed)
         {
             throw new ObjectDisposedException(nameof(LokiLogEntryProcessor));
         }
 
-        if (this.MessageQueue.IsAddingCompleted)
+        if (MessageQueue.IsAddingCompleted)
         {
             return;
         }
 
         try
         {
-            this.MessageQueue.Add(message);
+            MessageQueue.Add(message);
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException ex)
         {
             // Do nothing
+            Debug.WriteLine(ex);
         }
     }
 
@@ -77,20 +80,21 @@ internal sealed class LokiLogEntryProcessor : ILokiLogEntryProcessor
     {
         try
         {
-            foreach (LokiLogEntry entry in this.MessageQueue.GetConsumingEnumerable())
+            foreach (LokiLogEntry entry in MessageQueue.GetConsumingEnumerable())
             {
-                this.PushMessage(entry);
+                PushMessage(entry);
             }
         }
         catch
         {
             try
             {
-                this.MessageQueue.CompleteAdding();
+                MessageQueue.CompleteAdding();
             }
-            catch
+            catch (Exception ex)
             {
                 // Do nothing
+                Debug.WriteLine(ex);
             }
         }
     }
@@ -99,11 +103,12 @@ internal sealed class LokiLogEntryProcessor : ILokiLogEntryProcessor
     {
         try
         {
-            this.client.Push(entry);
+            client.Push(entry);
         }
-        catch
+        catch (Exception ex)
         {
             // Do nothing
+            Debug.WriteLine(ex);
         }
     }
 }

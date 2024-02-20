@@ -1,4 +1,4 @@
-namespace LokiLoggingProvider.Formatters;
+namespace LoggingProvider.Loki.Formatters;
 
 using System;
 using System.Collections.Generic;

@@ -1,7 +1,7 @@
 namespace LokiLoggingProvider.UnitTests.Extensions;
 
 using System.Diagnostics;
-using LokiLoggingProvider.Extensions;
+using LoggingProvider.Loki.Extensions;
 using Xunit;
 
 public class ActivityExtensionsUnitTests

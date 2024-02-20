@@ -1,4 +1,4 @@
-namespace LokiLoggingProvider.Logger;
+namespace LoggingProvider.Loki.Logger;
 
 using System;
 

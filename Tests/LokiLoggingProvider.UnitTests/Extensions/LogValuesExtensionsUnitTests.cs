@@ -1,8 +1,8 @@
 namespace LokiLoggingProvider.UnitTests.Extensions;
 
 using System.Diagnostics;
-using LokiLoggingProvider.Extensions;
-using LokiLoggingProvider.Formatters;
+using LoggingProvider.Loki.Extensions;
+using LoggingProvider.Loki.Formatters;
 using Xunit;
 
 public class LogValuesExtensionsUnitTests

@@ -1,8 +1,8 @@
-namespace LokiLoggingProvider.Extensions;
+namespace LoggingProvider.Loki.Extensions;
 
-using LokiLoggingProvider.Formatters;
-using LokiLoggingProvider.LoggerFactories;
-using LokiLoggingProvider.Options;
+using LoggingProvider.Loki.Formatters;
+using LoggingProvider.Loki.LoggerFactories;
+using LoggingProvider.Loki.Options;
 
 internal static class LokiLoggerOptionsExtensions
 {
@@ -22,12 +22,6 @@ internal static class LokiLoggerOptionsExtensions
 
         return options.Client switch
         {
-            PushClient.Grpc => new GrpcLoggerFactory(
-                options.Grpc,
-                options.StaticLabels,
-                options.DynamicLabels,
-                formatter),
-
             PushClient.Http => new HttpLoggerFactory(
                 options.Http,
                 options.StaticLabels,

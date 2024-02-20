@@ -1,4 +1,4 @@
-namespace LokiLoggingProvider.LoggerFactories;
+namespace LoggingProvider.Loki.LoggerFactories;
 
 using System;
 using System.Collections.Concurrent;
@@ -6,10 +6,10 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using LokiLoggingProvider.Formatters;
-using LokiLoggingProvider.Logger;
-using LokiLoggingProvider.Options;
-using LokiLoggingProvider.PushClients;
+using LoggingProvider.Loki.Formatters;
+using LoggingProvider.Loki.Logger;
+using LoggingProvider.Loki.Options;
+using LoggingProvider.Loki.PushClients;
 using Microsoft.Extensions.Logging;
 
 internal sealed class HttpLoggerFactory : ILokiLoggerFactory
@@ -36,7 +36,7 @@ internal sealed class HttpLoggerFactory : ILokiLoggerFactory
         DynamicLabelOptions dynamicLabelOptions,
         ILogEntryFormatter formatter)
     {
-        this.httpClient = new()
+        httpClient = new()
         {
             BaseAddress = new Uri(httpOptions.Address),
         };
@@ -44,11 +44,11 @@ internal sealed class HttpLoggerFactory : ILokiLoggerFactory
         if (!string.IsNullOrEmpty(httpOptions.User) && !string.IsNullOrEmpty(httpOptions.Password))
         {
             byte[] credentials = Encoding.ASCII.GetBytes($"{httpOptions.User}:{httpOptions.Password}");
-            this.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(credentials));
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(credentials));
         }
 
-        HttpPushClient pushClient = new(this.httpClient);
-        this.processor = new LokiLogEntryProcessor(pushClient);
+        HttpPushClient pushClient = new(httpClient);
+        processor = new LokiLogEntryProcessor(pushClient);
 
         this.staticLabelOptions = staticLabelOptions;
         this.dynamicLabelOptions = dynamicLabelOptions;
@@ -58,39 +58,39 @@ internal sealed class HttpLoggerFactory : ILokiLoggerFactory
 
     public ILogger CreateLogger(string categoryName)
     {
-        if (this.disposed)
+        if (disposed)
         {
             throw new ObjectDisposedException(nameof(HttpLoggerFactory));
         }
 
-        return this.loggers.GetOrAdd(categoryName, name => new LokiLogger(
+        return loggers.GetOrAdd(categoryName, name => new LokiLogger(
             name,
-            this.formatter,
-            this.processor,
-            this.staticLabelOptions,
-            this.dynamicLabelOptions)
+            formatter,
+            processor,
+            staticLabelOptions,
+            dynamicLabelOptions)
         {
-            ScopeProvider = this.scopeProvider,
+            ScopeProvider = scopeProvider,
         });
     }
 
     public void Dispose()
     {
-        if (this.disposed)
+        if (disposed)
         {
             return;
         }
 
-        this.processor.Dispose();
-        this.httpClient.Dispose();
-        this.disposed = true;
+        processor.Dispose();
+        httpClient.Dispose();
+        disposed = true;
     }
 
     public void SetScopeProvider(IExternalScopeProvider scopeProvider)
     {
         this.scopeProvider = scopeProvider;
 
-        foreach (KeyValuePair<string, LokiLogger> logger in this.loggers)
+        foreach (KeyValuePair<string, LokiLogger> logger in loggers)
         {
             logger.Value.ScopeProvider = this.scopeProvider;
         }

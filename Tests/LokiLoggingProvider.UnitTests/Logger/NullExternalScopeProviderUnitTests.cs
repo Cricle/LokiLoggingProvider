@@ -2,7 +2,7 @@ namespace LokiLoggingProvider.UnitTests.Logger;
 
 using System;
 using System.Collections.Generic;
-using LokiLoggingProvider.Logger;
+using LoggingProvider.Loki.Logger;
 using Xunit;
 
 public class NullExternalScopeProviderUnitTests

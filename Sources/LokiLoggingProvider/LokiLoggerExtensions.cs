@@ -1,8 +1,7 @@
-namespace Microsoft.Extensions.Logging;
+namespace LoggingProvider.Loki;
 
 using System;
-using LokiLoggingProvider;
-using LokiLoggingProvider.Options;
+using LoggingProvider.Loki.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;

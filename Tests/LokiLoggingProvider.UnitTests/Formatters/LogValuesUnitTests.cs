@@ -1,6 +1,6 @@
 namespace LokiLoggingProvider.UnitTests.Formatters;
 
-using LokiLoggingProvider.Formatters;
+using LoggingProvider.Loki.Formatters;
 using Xunit;
 
 public class LogValuesUnitTests

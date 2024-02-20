@@ -1,10 +1,10 @@
-namespace LokiLoggingProvider.Formatters;
+namespace LoggingProvider.Loki.Formatters;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LokiLoggingProvider.Extensions;
-using LokiLoggingProvider.Options;
+using LoggingProvider.Loki.Extensions;
+using LoggingProvider.Loki.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -22,12 +22,12 @@ internal class LogfmtFormatter : ILogEntryFormatter
         LogValues logValues = new();
         logValues.SetLogLevel(logEntry.LogLevel.ToString());
 
-        if (this.formatterOptions.IncludeCategory)
+        if (formatterOptions.IncludeCategory)
         {
             logValues.SetCategory(logEntry.Category);
         }
 
-        if (this.formatterOptions.IncludeEventId)
+        if (formatterOptions.IncludeEventId)
         {
             logValues.SetEventId(logEntry.EventId.Id);
         }
@@ -38,11 +38,19 @@ internal class LogfmtFormatter : ILogEntryFormatter
         {
             foreach (KeyValuePair<string, object?> keyValuePair in state)
             {
+#if NETSTANDARD2_0
+                if (!logValues.ContainsKey(keyValuePair.Key))
+                {
+                    logValues.Add(keyValuePair.Key, keyValuePair.Value);
+                }
+#else
                 logValues.TryAdd(keyValuePair.Key, keyValuePair.Value);
+#endif
+
             }
         }
 
-        if (this.formatterOptions.IncludeScopes && scopeProvider != null)
+        if (formatterOptions.IncludeScopes && scopeProvider != null)
         {
             scopeProvider.ForEachScope(
                 (scope, state) =>
@@ -51,7 +59,14 @@ internal class LogfmtFormatter : ILogEntryFormatter
                     {
                         foreach (KeyValuePair<string, object?> keyValuePair in keyValuePairs)
                         {
+#if NETSTANDARD2_0
+                            if (!state.ContainsKey(keyValuePair.Key))
+                            {
+                                state.Add(keyValuePair.Key, keyValuePair.Value);
+                            }
+#else
                             state.TryAdd(keyValuePair.Key, keyValuePair.Value);
+#endif
                         }
                     }
                 },
@@ -63,14 +78,14 @@ internal class LogfmtFormatter : ILogEntryFormatter
             logValues.SetException(logEntry.Exception.GetType());
         }
 
-        if (this.formatterOptions.IncludeActivityTracking)
+        if (formatterOptions.IncludeActivityTracking)
         {
             logValues.AddActivityTracking();
         }
 
         string message = string.Join(" ", logValues.Select(keyValuePair => $"{ToLogfmtKey(keyValuePair.Key)}={ToLogfmtValue(keyValuePair.Value)}"));
 
-        if (logEntry.Exception != null && this.formatterOptions.PrintExceptions)
+        if (logEntry.Exception != null && formatterOptions.PrintExceptions)
         {
             message += Environment.NewLine + logEntry.Exception.ToString();
         }
@@ -97,6 +112,6 @@ internal class LogfmtFormatter : ILogEntryFormatter
             return $"\"{stringValue}\"";
         }
 
-        return stringValue;
+        return stringValue ?? string.Empty;
     }
 }

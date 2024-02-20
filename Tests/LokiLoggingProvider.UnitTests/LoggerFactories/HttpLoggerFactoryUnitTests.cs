@@ -5,10 +5,10 @@
 namespace LokiLoggingProvider.UnitTests.LoggerFactories;
 
 using System;
-using LokiLoggingProvider.Formatters;
-using LokiLoggingProvider.Logger;
-using LokiLoggingProvider.LoggerFactories;
-using LokiLoggingProvider.Options;
+using LoggingProvider.Loki.Formatters;
+using LoggingProvider.Loki.Logger;
+using LoggingProvider.Loki.LoggerFactories;
+using LoggingProvider.Loki.Options;
 using Microsoft.Extensions.Logging;
 using Xunit;
 

@@ -1,8 +1,8 @@
-namespace LokiLoggingProvider.Logger;
+namespace LoggingProvider.Loki.Logger;
 
 using System;
-using LokiLoggingProvider.Formatters;
-using LokiLoggingProvider.Options;
+using LoggingProvider.Loki.Formatters;
+using LoggingProvider.Loki.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -29,15 +29,16 @@ internal class LokiLogger : ILogger
         this.formatter = formatter;
         this.processor = processor;
 
-        this.staticLabels = new LabelValues(staticLabelOptions);
+        staticLabels = new LabelValues(staticLabelOptions);
         this.dynamicLabelOptions = dynamicLabelOptions;
     }
 
     internal IExternalScopeProvider ScopeProvider { get; set; } = NullExternalScopeProvider.Instance;
 
-    public IDisposable BeginScope<TState>(TState state)
+    public IDisposable? BeginScope<TState>(TState state)
+        where TState:notnull
     {
-        return this.ScopeProvider.Push(state);
+        return ScopeProvider.Push(state);
     }
 
     public bool IsEnabled(LogLevel logLevel)
@@ -47,17 +48,17 @@ internal class LokiLogger : ILogger
 
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
-        if (!this.IsEnabled(logLevel))
+        if (!IsEnabled(logLevel))
         {
             return;
         }
 
-        LogEntry<TState> logEntry = new(logLevel, this.categoryName, eventId, state, exception, formatter);
+        LogEntry<TState> logEntry = new(logLevel, categoryName, eventId, state, exception, formatter);
 
-        DateTime timestamp = DateTime.UtcNow;
-        LabelValues labels = this.staticLabels.AddDynamicLabels(this.dynamicLabelOptions, logEntry);
-        string message = this.formatter.Format(logEntry, this.ScopeProvider);
+        var timestamp = DateTimeOffset.Now;
+        LabelValues labels = staticLabels.AddDynamicLabels(dynamicLabelOptions, logEntry);
+        string message = this.formatter.Format(logEntry, ScopeProvider);
 
-        this.processor.EnqueueMessage(new LokiLogEntry(timestamp, labels, message));
+        processor.EnqueueMessage(new LokiLogEntry(timestamp, labels, message));
     }
 }

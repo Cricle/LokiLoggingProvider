@@ -1,9 +1,10 @@
-namespace LokiLoggingProvider.Formatters;
+namespace LoggingProvider.Loki.Formatters;
 
 using System;
 using System.Diagnostics;
-using LokiLoggingProvider.Extensions;
-using LokiLoggingProvider.Options;
+using System.Text;
+using LoggingProvider.Loki.Extensions;
+using LoggingProvider.Loki.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -18,21 +19,23 @@ internal class SimpleFormatter : ILogEntryFormatter
 
     public string Format<TState>(LogEntry<TState> logEntry, IExternalScopeProvider? scopeProvider = null)
     {
-        string message = $"[{GetLogLevelString(logEntry.LogLevel)}] ";
+        var message = new StringBuilder($"[{GetLogLevelString(logEntry.LogLevel)}] ");
 
-        if (this.formatterOptions.IncludeActivityTracking && Activity.Current is Activity activity)
+        if (formatterOptions.IncludeActivityTracking && Activity.Current is Activity activity)
         {
-            message += $"{activity.GetTraceId()} - ";
+            message.Append(activity.GetTraceId());
+            message.Append(" - ");
         }
 
-        message += logEntry.Formatter?.Invoke(logEntry.State, logEntry.Exception) ?? "Something happened.";
+        message.Append(logEntry.Formatter?.Invoke(logEntry.State, logEntry.Exception) ?? "Something happened.");
 
         if (logEntry.Exception != null)
         {
-            message += Environment.NewLine + logEntry.Exception.ToString();
+            message.AppendLine();
+            message.Append(logEntry.Exception.ToString());
         }
 
-        return message;
+        return message.ToString();
     }
 
     private static string GetLogLevelString(LogLevel logLevel)

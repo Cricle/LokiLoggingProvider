@@ -6,8 +6,8 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
 using System.Threading;
-using LokiLoggingProvider.Logger;
-using LokiLoggingProvider.PushClients;
+using LoggingProvider.Loki.Logger;
+using LoggingProvider.Loki.PushClients;
 using Xunit;
 
 public class HttpPushClientUnitTests

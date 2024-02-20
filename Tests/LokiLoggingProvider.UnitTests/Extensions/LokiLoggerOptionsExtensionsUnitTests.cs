@@ -1,10 +1,10 @@
 namespace LokiLoggingProvider.UnitTests.Extensions;
 
 using System;
-using LokiLoggingProvider.Extensions;
-using LokiLoggingProvider.Formatters;
-using LokiLoggingProvider.LoggerFactories;
-using LokiLoggingProvider.Options;
+using LoggingProvider.Loki.Extensions;
+using LoggingProvider.Loki.Formatters;
+using LoggingProvider.Loki.LoggerFactories;
+using LoggingProvider.Loki.Options;
 using Xunit;
 
 public class LokiLoggerOptionsExtensionsUnitTests
@@ -33,7 +33,6 @@ public class LokiLoggerOptionsExtensionsUnitTests
     {
         [Theory]
         [InlineData(PushClient.None, typeof(NullLoggerFactory))]
-        [InlineData(PushClient.Grpc, typeof(GrpcLoggerFactory))]
         [InlineData(PushClient.Http, typeof(HttpLoggerFactory))]
         [InlineData((PushClient)100, typeof(NullLoggerFactory))] // Invalid Push Client
         public void When_CreatingLoggerFactory_Expect_LoggerFactory(PushClient client, Type expectedType)

@@ -1,12 +1,9 @@
-namespace LokiLoggingProvider.Options;
+namespace LoggingProvider.Loki.Options;
 
 public class LokiLoggerOptions
 {
-    /// <summary>The push client to use. Valid values are 'None', 'Grpc' or 'Http'. Defaults to 'None'.</summary>
+    /// <summary>The push client to use. Valid values are 'None', 'Http'. Defaults to 'None'.</summary>
     public PushClient Client { get; set; } = PushClient.None;
-
-    /// <summary>Configures the gRPC push client.</summary>
-    public GrpcOptions Grpc { get; set; } = new GrpcOptions();
 
     /// <summary>Configures the HTTP push client.</summary>
     public HttpOptions Http { get; set; } = new HttpOptions();
