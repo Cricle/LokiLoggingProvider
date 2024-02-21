@@ -22,10 +22,7 @@ internal class JsonFormatter : ILogEntryFormatter
     {
         this.formatterOptions = formatterOptions;
 
-        serializerOptions = new JsonSerializerOptions(LogValuesJsonSerializerContext.Default.Options)
-        {
-            WriteIndented = this.formatterOptions.WriteIndented,
-        };
+        serializerOptions = LogValuesJsonSerializerContext.Default.Options;
     }
 
     public string Format<TState>(LogEntry<TState> logEntry, IExternalScopeProvider? scopeProvider = null)

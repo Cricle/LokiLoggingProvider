@@ -48,6 +48,7 @@ internal sealed class LokiLogEntryProcessor : ILokiLogEntryProcessor
         {
             // Do nothing
             Debug.WriteLine(ex);
+            LokiExceptionHelper.RaiseException(this, ex);
         }
 
         disposed = true;
@@ -73,6 +74,7 @@ internal sealed class LokiLogEntryProcessor : ILokiLogEntryProcessor
         {
             // Do nothing
             Debug.WriteLine(ex);
+            LokiExceptionHelper.RaiseException(this, ex);
         }
     }
 
@@ -95,6 +97,7 @@ internal sealed class LokiLogEntryProcessor : ILokiLogEntryProcessor
             {
                 // Do nothing
                 Debug.WriteLine(ex);
+                LokiExceptionHelper.RaiseException(this, ex);
             }
         }
     }
@@ -109,6 +112,7 @@ internal sealed class LokiLogEntryProcessor : ILokiLogEntryProcessor
         {
             // Do nothing
             Debug.WriteLine(ex);
+            LokiExceptionHelper.RaiseException(this, ex);
         }
     }
 }

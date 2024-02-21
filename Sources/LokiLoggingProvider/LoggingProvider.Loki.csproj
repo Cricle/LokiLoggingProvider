@@ -5,6 +5,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
+        <Version>1.0.1</Version>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(PublishAot)'!=''">
 		<TargetFrameworks>net8.0</TargetFrameworks>

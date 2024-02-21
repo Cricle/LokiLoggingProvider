@@ -36,7 +36,7 @@ internal class LokiLogger : ILogger
     internal IExternalScopeProvider ScopeProvider { get; set; } = NullExternalScopeProvider.Instance;
 
     public IDisposable? BeginScope<TState>(TState state)
-        where TState:notnull
+        where TState : notnull
     {
         return ScopeProvider.Push(state);
     }
