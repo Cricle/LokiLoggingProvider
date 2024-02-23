@@ -6,13 +6,13 @@ namespace LoggingProvider.Loki;
 using System.Buffers;
 using System.Diagnostics;
 
-internal sealed class PooledByteBufferWriter : IBufferWriter<byte>, IDisposable
+internal sealed class PooledByteBufferWriter<T> : IBufferWriter<T>, IDisposable
 {
     // This class allows two possible configurations: if rentedBuffer is not null then
     // it can be used as an IBufferWriter and holds a buffer that should eventually be
     // returned to the shared pool. If rentedBuffer is null, then the instance is in a
     // cleared/disposed state and it must re-rent a buffer before it can be used again.
-    private byte[]? _rentedBuffer;
+    private T[]? _rentedBuffer;
     private int _index;
 
     private const int MinimumBufferSize = 256;
@@ -20,23 +20,15 @@ internal sealed class PooledByteBufferWriter : IBufferWriter<byte>, IDisposable
     // Value copied from Array.MaxLength in System.Private.CoreLib/src/libraries/System.Private.CoreLib/src/System/Array.cs.
     public const int MaximumBufferSize = 0X7FFFFFC7;
 
-    private PooledByteBufferWriter()
-    {
-#if NETCOREAPP
-        // Ensure we are in sync with the Array.MaxLength implementation.
-        Debug.Assert(MaximumBufferSize == Array.MaxLength);
-#endif
-    }
-
-    public PooledByteBufferWriter(int initialCapacity) : this()
+    public PooledByteBufferWriter(int initialCapacity)
     {
         Debug.Assert(initialCapacity > 0);
 
-        _rentedBuffer = ArrayPool<byte>.Shared.Rent(initialCapacity);
+        _rentedBuffer = ArrayPool<T>.Shared.Rent(initialCapacity);
         _index = 0;
     }
 
-    public ReadOnlyMemory<byte> WrittenMemory
+    public ReadOnlyMemory<T> WrittenMemory
     {
         get
         {
@@ -73,6 +65,15 @@ internal sealed class PooledByteBufferWriter : IBufferWriter<byte>, IDisposable
         }
     }
 
+    public T[] DangerouGetArray()
+    {
+        if (_rentedBuffer==null)
+        {
+            return Array.Empty<T>();
+        }
+        return _rentedBuffer;
+    }
+
     public void Clear()
     {
         ClearHelper();
@@ -83,9 +84,9 @@ internal sealed class PooledByteBufferWriter : IBufferWriter<byte>, IDisposable
         Debug.Assert(_rentedBuffer != null);
 
         ClearHelper();
-        byte[] toReturn = _rentedBuffer;
+        T[] toReturn = _rentedBuffer;
         _rentedBuffer = null;
-        ArrayPool<byte>.Shared.Return(toReturn);
+        ArrayPool<T>.Shared.Return(toReturn);
     }
 
     private void ClearHelper()
@@ -106,9 +107,9 @@ internal sealed class PooledByteBufferWriter : IBufferWriter<byte>, IDisposable
         }
 
         ClearHelper();
-        byte[] toReturn = _rentedBuffer;
+        T[] toReturn = _rentedBuffer;
         _rentedBuffer = null;
-        ArrayPool<byte>.Shared.Return(toReturn);
+        ArrayPool<T>.Shared.Return(toReturn);
     }
 
     public void InitializeEmptyInstance(int initialCapacity)
@@ -116,11 +117,9 @@ internal sealed class PooledByteBufferWriter : IBufferWriter<byte>, IDisposable
         Debug.Assert(initialCapacity > 0);
         Debug.Assert(_rentedBuffer is null);
 
-        _rentedBuffer = ArrayPool<byte>.Shared.Rent(initialCapacity);
+        _rentedBuffer = ArrayPool<T>.Shared.Rent(initialCapacity);
         _index = 0;
     }
-
-    public static PooledByteBufferWriter CreateEmptyInstanceForCaching() => new PooledByteBufferWriter();
 
     public void Advance(int count)
     {
@@ -130,41 +129,17 @@ internal sealed class PooledByteBufferWriter : IBufferWriter<byte>, IDisposable
         _index += count;
     }
 
-    public Memory<byte> GetMemory(int sizeHint = MinimumBufferSize)
+    public Memory<T> GetMemory(int sizeHint = MinimumBufferSize)
     {
         CheckAndResizeBuffer(sizeHint);
         return _rentedBuffer.AsMemory(_index);
     }
 
-    public Span<byte> GetSpan(int sizeHint = MinimumBufferSize)
+    public Span<T> GetSpan(int sizeHint = MinimumBufferSize)
     {
         CheckAndResizeBuffer(sizeHint);
         return _rentedBuffer.AsSpan( _index);
     }
-
-#if NETCOREAPP
-    internal ValueTask WriteToStreamAsync(Stream destination, CancellationToken cancellationToken)
-    {
-        return destination.WriteAsync(WrittenMemory, cancellationToken);
-    }
-
-    internal void WriteToStream(Stream destination)
-    {
-        destination.Write(WrittenMemory.Span);
-    }
-#else
-        internal Task WriteToStreamAsync(Stream destination, CancellationToken cancellationToken)
-        {
-            Debug.Assert(_rentedBuffer != null);
-            return destination.WriteAsync(_rentedBuffer, 0, _index, cancellationToken);
-        }
- 
-        internal void WriteToStream(Stream destination)
-        {
-            Debug.Assert(_rentedBuffer != null);
-            destination.Write(_rentedBuffer, 0, _index);
-        }
-#endif
 
     private void CheckAndResizeBuffer(int sizeHint)
     {
@@ -196,17 +171,17 @@ internal sealed class PooledByteBufferWriter : IBufferWriter<byte>, IDisposable
                 }
             }
 
-            byte[] oldBuffer = _rentedBuffer;
+            T[] oldBuffer = _rentedBuffer;
 
-            _rentedBuffer = ArrayPool<byte>.Shared.Rent(newSize);
+            _rentedBuffer = ArrayPool<T>.Shared.Rent(newSize);
 
             Debug.Assert(oldBuffer.Length >= _index);
             Debug.Assert(_rentedBuffer.Length >= _index);
 
-            Span<byte> oldBufferAsSpan = oldBuffer.AsSpan(0, _index);
+            Span<T> oldBufferAsSpan = oldBuffer.AsSpan(0, _index);
             oldBufferAsSpan.CopyTo(_rentedBuffer);
             oldBufferAsSpan.Clear();
-            ArrayPool<byte>.Shared.Return(oldBuffer);
+            ArrayPool<T>.Shared.Return(oldBuffer);
         }
 
         Debug.Assert(_rentedBuffer.Length - _index > 0);

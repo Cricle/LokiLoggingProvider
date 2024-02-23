@@ -2,7 +2,10 @@ namespace LoggingProvider.Loki.Formatters;
 
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
+#if NETSTANDARD2_0
 using System.Text;
+#endif
 using LoggingProvider.Loki.Extensions;
 using LoggingProvider.Loki.Options;
 using Microsoft.Extensions.Logging;
@@ -19,6 +22,8 @@ internal class SimpleFormatter : ILogEntryFormatter
 
     public string Format<TState>(LogEntry<TState> logEntry, IExternalScopeProvider? scopeProvider = null)
     {
+#if NETSTANDARD2_0
+
         var message = new StringBuilder($"[{GetLogLevelString(logEntry.LogLevel)}] ");
 
         if (formatterOptions.IncludeActivityTracking && Activity.Current is Activity activity)
@@ -36,6 +41,27 @@ internal class SimpleFormatter : ILogEntryFormatter
         }
 
         return message.ToString();
+#else
+        var def = new DefaultInterpolatedStringHandler();
+        def.AppendLiteral("[");
+        def.AppendLiteral(GetLogLevelString(logEntry.LogLevel));
+        def.AppendLiteral("}");
+        if (formatterOptions.IncludeActivityTracking && Activity.Current is Activity activity)
+        {
+            def.AppendLiteral(activity.GetTraceId()!);
+            def.AppendLiteral(" - ");
+        }
+
+        def.AppendLiteral(logEntry.Formatter?.Invoke(logEntry.State, logEntry.Exception) ?? "Something happened.");
+
+        if (logEntry.Exception != null)
+        {
+            def.AppendLiteral(Environment.NewLine);
+            def.AppendLiteral(logEntry.Exception.ToString());
+        }
+
+        return def.ToStringAndClear();
+#endif
     }
 
     private static string GetLogLevelString(LogLevel logLevel)

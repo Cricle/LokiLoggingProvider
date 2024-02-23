@@ -34,6 +34,7 @@ internal sealed class HttpLoggerFactory : ILokiLoggerFactory
         HttpOptions httpOptions,
         StaticLabelOptions staticLabelOptions,
         DynamicLabelOptions dynamicLabelOptions,
+        BatchOptions batchOptions,
         ILogEntryFormatter formatter)
     {
         httpClient = new()
@@ -48,7 +49,7 @@ internal sealed class HttpLoggerFactory : ILokiLoggerFactory
         }
 
         HttpPushClient pushClient = new(httpClient);
-        processor = new LokiLogEntryProcessor(pushClient);
+        processor = new LokiLogEntryProcessor(pushClient, batchOptions);
 
         this.staticLabelOptions = staticLabelOptions;
         this.dynamicLabelOptions = dynamicLabelOptions;

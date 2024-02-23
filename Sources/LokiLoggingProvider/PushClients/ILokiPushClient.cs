@@ -4,5 +4,5 @@ using LoggingProvider.Loki.Logger;
 
 internal interface ILokiPushClient
 {
-    void Push(LokiLogEntry entry);
+    Task PushAsync(IReadOnlyList<LokiLogEntry> entries,int start,int length);
 }

@@ -25,4 +25,6 @@ public class LokiLoggerOptions
 
     /// <summary>Configures the 'Logfmt' Formatter.</summary>
     public LogfmtFormatterOptions LogfmtFormatter { get; set; } = new LogfmtFormatterOptions();
+
+    public BatchOptions BatchOptions { get; set; } = new BatchOptions();
 }

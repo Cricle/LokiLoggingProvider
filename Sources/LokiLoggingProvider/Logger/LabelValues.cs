@@ -1,17 +1,27 @@
 namespace LoggingProvider.Loki.Logger;
 
+using LoggingProvider.Loki.Options;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LoggingProvider.Loki.Options;
-using Microsoft.Extensions.Logging.Abstractions;
+using System.Runtime.CompilerServices;
 
-internal class LabelValues : Dictionary<string, string>
+internal class LabelValues : IDisposable
 {
-    public LabelValues()
-    {
-    }
+    private readonly PooledByteBufferWriter<KeyValuePair<string, string>> writer = new PooledByteBufferWriter<KeyValuePair<string, string>>(64);
 
+    public ReadOnlyMemory<KeyValuePair<string, string>> Labels => writer.WrittenMemory;
+
+    public LabelValues(LabelValues value)
+    {
+        if (value.writer.WrittenCount != 0)
+        {
+            var buffer = writer.GetMemory(value.writer.WrittenCount);
+            value.writer.WrittenMemory.CopyTo(buffer);
+            writer.Advance(value.writer.WrittenCount);
+        }
+    }
     public LabelValues(StaticLabelOptions options)
     {
         if (!string.IsNullOrWhiteSpace(options.JobName))
@@ -23,29 +33,23 @@ internal class LabelValues : Dictionary<string, string>
         {
             SetInstance(Environment.MachineName);
         }
-
-        foreach (KeyValuePair<string, object?> label in options.AdditionalStaticLabels)
+        if (options.AdditionalStaticLabels.Count != 0)
         {
-            string? value = label.Value?.ToString();
 
-            if (value != null)
+            var sp = writer.GetSpan(options.AdditionalStaticLabels.Count);
+            var i = 0;
+            foreach (var item in options.AdditionalStaticLabels)
             {
-#if NETSTANDARD2_0
-                var key = label.Key.Replace(" ", string.Empty);
-                if (!ContainsKey(key))
+                string? value = item.Value?.ToString();
+                if (item.Value != null)
                 {
-                    this[key] = value;
+                    var key = item.Key.AsSpan().IndexOf(' ') == -1 ? item.Key : item.Key.Replace(" ", string.Empty);
+                    sp[i] = new KeyValuePair<string, string>(key, value);
+                    i++;
                 }
-#else
-                TryAdd(label.Key.Replace(" ", string.Empty), value);
-#endif
             }
+            writer.Advance(i);
         }
-    }
-
-    private LabelValues(IDictionary<string, string> dictionary)
-        : base(dictionary)
-    {
     }
 
     public LabelValues AddDynamicLabels<TState>(DynamicLabelOptions options, LogEntry<TState> logEntry)
@@ -76,57 +80,77 @@ internal class LabelValues : Dictionary<string, string>
         {
             foreach (var item in tags)
             {
-                if (item.Key!= "{OriginalFormat}" && item.Value != null)
+                if (item.Key != "{OriginalFormat}" && item.Value != null)
                 {
-
-#if NETSTANDARD2_0
-                    if (!labelValues.ContainsKey(item.Key))
+                    if (!HasKey(item.Key))
                     {
-                        labelValues.Add(item.Key, item.Value.ToString()!);
+                        Add(item.Key, item.Value!.ToString()!);
                     }
-#else
-
-                    labelValues.TryAdd(item.Key, item.Value!.ToString()!);
-#endif
                 }
             }
         }
 
         return labelValues;
     }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool HasKey(string key)
+    {
+        var sp = writer.WrittenMemory.Span;
+        for (int i = 0; i < sp.Length; i++)
+        {
+            if (sp[i].Key == key)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    public void Add(string key, string value)
+    {
+        if (!HasKey(key))
+        {
+            var sp = writer.GetSpan(1);
+            sp[0] = new KeyValuePair<string, string>(key, value);
+            writer.Advance(1);
+        }
+    }
     public void SetJob(string value)
     {
-        this["job"] = value;
+        Add("job", value);
     }
 
     public void SetInstance(string value)
     {
-        this["instance"] = value;
+        Add("instance", value);
     }
 
     public void SetCategory(string value)
     {
-        this["category"] = value;
+        Add("category", value);
     }
 
     public void SetLogLevel(string value)
     {
-        this["level"] = value;
+        Add("level", value);
     }
 
     public void SetEventId(string value)
     {
-        this["eventId"] = value;
+        Add("eventId", value);
     }
 
     public void SetException(string value)
     {
-        this["exception"] = value;
+        Add("exception", value);
     }
 
     public override string ToString()
     {
-        return string.Join(",", this.Select(keyValuePair => $"{keyValuePair.Key}=\"{keyValuePair.Value}\""));
+        return string.Join(",", writer.WrittenMemory.ToArray().Select(keyValuePair => $"{keyValuePair.Key}=\"{keyValuePair.Value}\""));
+    }
+
+    public void Dispose()
+    {
+        writer.Dispose();
     }
 }

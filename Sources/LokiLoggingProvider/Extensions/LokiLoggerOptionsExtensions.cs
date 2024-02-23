@@ -26,6 +26,7 @@ internal static class LokiLoggerOptionsExtensions
                 options.Http,
                 options.StaticLabels,
                 options.DynamicLabels,
+                options.BatchOptions,
                 formatter),
 
             _ => new NullLoggerFactory(),
